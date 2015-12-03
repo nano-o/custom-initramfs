@@ -6,9 +6,7 @@ verbose="n"
 image_root=$1
 
 # location of busybox on the fs of the image:
-busybox="/bin/busybox"
-
-command -v busybox >/dev/null 2>&1 || { echo >&2 "error: busybox is not installed.  Aborting."; exit 1; }
+busybox=$2
 
 busybox_target=${image_root}$busybox
 
@@ -20,7 +18,7 @@ fi
 list=`busybox --list-all`
 
 for f in $list; do
-    target=${image_root}$f
+    target=${image_root}/$f
     dirname=$(dirname "$target")
     if [ ! -d "$dirname" ]; then
         [ "${verbose}" = "y" ] && echo "creating directory $dirname"
