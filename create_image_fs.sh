@@ -55,13 +55,19 @@ declare -r image_root=$(absolute_path $image_root)
 mkdir -p ${image_root}/{bin,dev,etc,lib,lib64,mnt/root,proc,root,sbin,sys}
 
 # install packages
-for p in $(ls -1 ${packages_dir}/); do
-    dir="${packages_dir}/$p/"
-    if [ -d $dir ]; then
-        script="$dir/$(basename $dir).sh"
-        ( cd $dir; . $script)
-    fi
-done
+inst_packages() {
+    local p
+    local dir
+    local script
+    for p in $(ls -1 ${packages_dir}/); do
+        dir="${packages_dir}/$p/"
+        if [ -d $dir ]; then
+            script="$dir/$(basename $dir).sh"
+            ( cd $dir; . $script)
+        fi
+    done
+}
+inst_packages
 
 # copy file from $image_file
 files="tunnelize.sh tunnel heartbeat"
