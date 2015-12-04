@@ -82,3 +82,4 @@ tty4::askfirst:-/bin/sh
 #::shutdown:/bin/umount -a -r
 #::shutdown:/sbin/swapoff -a
 
+vty0::respawn:/sbin/getty -L vty0 38400 vt100
