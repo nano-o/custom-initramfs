@@ -54,9 +54,9 @@ mkdir -p ${image_root}/{bin,dev,etc,lib,lib64,mnt/root,proc,root,sbin,sys}
 inst_packages() {
     local p dir script
     for p in $(ls -1 ${packages_dir}/); do
-        readonly dir="${packages_dir}/$p/"
+        dir="${packages_dir}/$p/"
         if [ -d $dir ]; then
-            readonly script="$dir/$(basename $dir).sh"
+            script="$dir/$(basename $dir).sh"
             ( cd $dir; . $script ) || fail "running $script failed"
         fi
     done
