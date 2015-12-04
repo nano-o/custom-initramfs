@@ -1,12 +1,5 @@
 #!/bin/bash
-
-verbose="n"
-
-# $1 is the root of the image
-image_root=$1
-
-# location of busybox on the fs of the image:
-busybox=$2
+set -eu -o pipefail
 
 busybox_target=${image_root}$busybox
 

@@ -1,42 +1,74 @@
 #!/bin/bash
+set -eu -o pipefail
 
-usage="Usage: create_image_fs.sh image_root image_files_dir"
-image_root=$1
-image_files=$2
+readonly verbose="n"
 
-if [ -z $image_root ]; then
-    echo >&2 "error: image root not given. Aborting"
-    echo >&2 $usage
+readonly usage="Usage: create_image_fs.sh image_root image_files_dir packages_dir"
+if [ $# -ne 3 ]; then
+    echo $usage >&2
+    echo "ERROR: wrong number of parameters" >&2
     exit 1
+fi
+
+declare image_root=$1
+declare image_files=$2
+declare packages_dir=$3
+declare scripts_dir=$(pwd)
+
+# load utility function definitions
+. ${scripts_dir}/utils.sh
+
+trap 'fail "caught signal"' HUP KILL QUIT
+
+# check parameters
+if [ -z $image_root ]; then
+    fail "image root not given"
 fi
 
 if [ -z $image_files ] || [ ! -d $image_files ]; then
-    echo >&2 "error: image files directory not given or not found. Aborting"
-    echo >&2 $usage
-    exit 1
+    fail "image files directory not given or not found"
 fi
 
-# first clean the image root
+if [ -z $packages_dir ] || [ ! -d $packages_dir ]; then
+    fail "image files directory not given or not found"
+fi
+
+declare -r image_files=$(absolute_path $image_files)
+declare -r packages_dir=$(absolute_path $packages_dir)
+
+# clean the image root
 if [ -d $image_root ]; then
     echo "cleaning $image_root"
     rm -r $image_root
 else
+    # if $image_root is not an existing dir, check whether its parent exists.
     dirname=$(dirname "$image_root")
     if [ ! -d $dirname ]; then
-        echo >&2 "error: $dirname does not exist. Aborting"
-        exit 1
+        fail "$dirname does not exist"
     fi
 fi
-
 mkdir $image_root
+
+declare -r image_root=$(absolute_path $image_root)
+
+# create the basic fs structure
 mkdir -p ${image_root}/{bin,dev,etc,lib,lib64,mnt/root,proc,root,sbin,sys}
 
+# install packages
+for p in $(ls -1 ${packages_dir}/); do
+    dir="${packages_dir}/$p/"
+    if [ -d $dir ]; then
+        script="$dir/$(basename $dir).sh"
+        ( cd $dir; . $script)
+    fi
+done
+
 # copy file from $image_file
-files="etc/inittab etc/init.d/rc.S"
+files="tunnelize.sh tunnel heartbeat"
 for f in $files; do
     source=${image_files}"/""$f"
     if [ ! -f $source ]; then
-        echo >&2 "error: $source not found. Aborting"
+        fail "$source not found"
         exit 1
     fi
     target=${image_root}"/""$f"
@@ -45,27 +77,3 @@ for f in $files; do
     cp $source $target
 done
 
-command -v busybox >/dev/null 2>&1 || { echo >&2 "error: busybox is not installed.  Aborting."; exit 1; }
-
-# copy busybox from the current system
-busybox="/bin/busybox"
-if [ ! -f $busybox ]; then
-    echo >&2 "error: $busybox not found. Aborting"
-    exit 1
-else
-    ./copy_exec.sh $busybox $image_root
-fi
-
-# create a symlink from /init to /bin/busybox
-ln -s /bin/busybox ${image_root}/init
-
-./create_busybox_links.sh $image_root $busybox
-
-udhcpc_default_script="/etc/udhcpc/default.script"
-if [ ! -f $udhcpc_default_script ]; then
-    echo >&2 "error: $udhcpc_default_script not found. Aborting"
-    exit 1
-else
-    mkdir ${image_root}"/etc/udhcpc/"
-    cp $udhcpc_default_script  ${image_root}"/etc/udhcpc/"
-fi
