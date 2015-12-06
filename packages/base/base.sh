@@ -6,7 +6,7 @@ set -eu -o pipefail
 command -v busybox >/dev/null 2>&1 || { echo >&2 "error: busybox is not installed.  Aborting."; exit 1; }
 readonly busybox=$(command -v busybox)
 
-${scripts_dir}/copy_exec.sh "$busybox" "$image_root"
+"${scripts_dir}/copy_exec.sh" "$busybox" "$image_root"
 
 # create a symlink from /init to /bin/busybox
 ln -s /bin/busybox "${image_root}/init"

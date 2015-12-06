@@ -21,9 +21,9 @@ inst_packages() {
     local p dir script
     for p in $(ls -1 "${packages_dir}/"); do
         dir="${packages_dir}/$p/"
-        if [ -d $dir ]; then
+        if [ -d "$dir" ]; then
             script="$dir/$(basename "$dir").sh"
-            ( cd $dir; . $script ) || fail "running $script failed"
+            ( cd "$dir"; . "$script" ) || fail "running $script failed"
         fi
     done
 }
