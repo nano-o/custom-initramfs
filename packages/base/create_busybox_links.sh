@@ -1,4 +1,5 @@
 #!/bin/bash
+# creates symlinks for all busybox utilities.
 set -eu -o pipefail
 
 # expects $image_root and $busybox to be set
