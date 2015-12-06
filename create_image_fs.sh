@@ -5,14 +5,10 @@ set -eu -o pipefail
 
 # clean the image root
 if [ -d "$image_root" ]; then
-    declare -r image_root=$(absolute_path "$image_root")
     echo "cleaning $image_root"
     rm -r "$image_root"
     mkdir "$image_root"
 else
-    # if $image_root is not an existing dir, check whether its parent exists.
-    readonly root_parent=$(dirname "$image_root")
-    [ -d "$root_parent" ] || fail "directory $root_parent not found"
     mkdir "$image_root"
     declare -r image_root=$(absolute_path "$image_root")
 fi
